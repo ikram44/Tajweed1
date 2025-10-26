@@ -2,165 +2,174 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>اختبار تجويد – مخارج الحروف وصفاتها</title>
+<title>اختبار تجويد تفاعلي</title>
 <style>
-  body {
-    font-family: 'Arial', sans-serif;
-    background-color: #fff8f0;
-    color: #333;
-    direction: rtl;
-    text-align: right;
-    padding: 20px;
-  }
-  h1 {
-    text-align: center;
-    color: #d35400;
-    font-size: 28px;
-  }
-  .question {
-    background-color: #fff3e0;
-    padding: 15px;
-    margin: 15px 0;
-    border-radius: 10px;
-    box-shadow: 2px 2px 5px #ccc;
-  }
-  .answers button {
-    display: block;
-    margin: 5px 0;
-    padding: 10px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    background-color: #f0e68c;
-    transition: 0.3s;
-  }
-  .answers button:hover {
-    background-color: #ffd700;
-  }
-  .feedback {
-    font-weight: bold;
-    margin-top: 10px;
-    font-size: 18px;
-  }
-  #result {
-    font-size: 22px;
-    margin-top: 20px;
-    text-align: center;
-    color: #c0392b;
-  }
-  /* Confetti animation */
-  .confetti {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 9999;
-  }
-  .confetti-piece {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background-color: #f39c12;
-    opacity: 0.9;
-    animation: fall 3s linear forwards;
-  }
-  @keyframes fall {
-    0% {transform: translateY(0) rotate(0deg);}
-    100% {transform: translateY(500px) rotate(360deg);}
-  }
+body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; background: #f0f8ff; }
+h1, h2 { text-align: center; color: #2E8B57; }
+.question { margin-bottom: 25px; padding: 15px; border: 1px solid #ccc; border-radius: 10px; background-color: #f9f9f9; position: relative; overflow: hidden; }
+.options button { display: block; margin: 5px 0; padding: 10px; width: 100%; border-radius: 5px; border: none; cursor: pointer; font-size: 16px; transition: transform 0.2s; }
+.options button:hover { transform: scale(1.02); }
+.correct { background-color: #4CAF50; color: white; }
+.wrong { background-color: #f44336; color: white; }
+.feedback { margin-top: 10px; font-weight: bold; font-size: 16px; }
+.firework { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; }
+.star { position: absolute; width: 10px; height: 10px; background: gold; border-radius: 50%; animation: fly 1s ease-out forwards; }
+@keyframes fly {
+  0% { transform: translate(0,0) scale(1); opacity:1; }
+  100% { transform: translate(var(--x), var(--y)) scale(0); opacity:0; }
+}
+#result { text-align: center; font-size: 22px; font-weight: bold; color: #2E8B57; margin-top: 30px; }
+#quizContainer { display:none; }
 </style>
 </head>
 <body>
 
-<h1>💐 اختبار التجويد – مخارج الحروف وصفاتها 💐</h1>
-<p>إعداد المعلمة إكرام – طالبات وتعاونوا</p>
+<h1>اختبار تجويد تفاعلي / Quiz Tajweed</h1>
+<h2>إعداد: إكرام خليف – طالبات وتعاونوا</h2>
 
-<div id="quiz"></div>
+<div id="startContainer" style="text-align:center;">
+<label>الاسم / Nom: <input type="text" id="studentName"></label><br><br>
+<button onclick="startQuiz()">ابدأ الاختبار / Commencer le quiz</button>
+</div>
+
+<div id="quizContainer"></div>
 
 <div id="result"></div>
 
-<audio id="success-sound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
-<audio id="fail-sound" src="https://www.soundjay.com/button/beep-10.wav"></audio>
-
-<div class="confetti" id="confetti"></div>
+<audio id="correctSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+<audio id="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
 
 <script>
-const quizData = [
-  {question: "ما هو مخرج حرف الألف؟", answers: ["من الحلق", "من الشفتين", "من الحلق واللسان", "من اللثة العليا"], correct: 0},
-  {question: "حرف الميم له صفة الإخفاء عند وقوفه قبل النون؟", answers: ["صح", "خطأ"], correct: 1},
-  {question: "اختر الحروف المخرجة من الشفتين:", answers: ["الباء، الميم", "القاف، الكاف", "الطاء، الدال", "العين، الغين"], correct: 0},
-  {question: "حرف الغين مخرجه:", answers: ["من أقصى الحلق", "من منتصف الحلق", "من الشفتين", "من اللثة"], correct: 1},
-  {question: "الصفة الصحيحة لحرف الصاد هي:", answers: ["مفخم", "مرقق", "مضغم", "مستوي"], correct: 0},
-  {question: "حروف الانفجارية المخرجة من الشفتين هي؟", answers: ["صح", "خطأ"], correct: 0},
-  {question: "اختر الحروف المخرجة من أقصى الحلق:", answers: ["الهاء، الحاء", "القاف، الغين", "العين، الغين، الحاء، الهاء", "الطاء، الدال"], correct: 2},
-  {question: "حروف الاستعلاء هي:", answers: ["الصاد، الضاد، الطاء، الظاء، القاف، الكاف", "الباء، الميم", "الفاء، الواو", "الراء، اللام"], correct: 0},
-  {question: "حرف الراء يُستعمل فيه التفخيم إذا سبقته:", answers: ["حروف الاستعلاء", "حروف المد فقط", "الشدة", "السكون"], correct: 0},
-  {question: "صفة الحروف الهجائية تُعرف بأنها:", answers: ["طريقة نطق الحرف", "مكان نطق الحرف", "وزن الحرف", "طول الحرف"], correct: 0}
+const questions = [
+  {
+    text: "الحكم التجويدي في قوله تعالى: 'عليمٌ حكيم' / Règle de Tajweed pour 'Alimun Hakim'",
+    options: ["أ) إدغام كامل بغنة / Complete Idgham avec Ghunnah", "ب) إدغام كامل بدون غنة / Complete Idgham sans Ghunnah", "ج) إدغام ناقص بغنة / Idgham partiel avec Ghunnah", "د) الإظهار الحقيقي / Al-Idhhar Al-Haqiqi", "هـ) الإظهار الشفوي / Al-Idhhar Al-Shafawi"],
+    correct: 3
+  },
+  {
+    text: "الحكم التجويدي في قوله تعالى: 'مِنْهُم' / Règle de Tajweed pour 'Minhum'",
+    options: ["أ) إدغام كامل بغنة / Complete Idgham avec Ghunnah", "ب) إدغام كامل بدون غنة / Complete Idgham sans Ghunnah", "ج) إدغام ناقص بغنة / Idgham partiel avec Ghunnah", "د) الإظهار الحقيقي / Al-Idhhar Al-Haqiqi", "هـ) الإظهار الشفوي / Al-Idhhar Al-Shafawi"],
+    correct: 3
+  },
+  {
+    text: "الحكم التجويدي في قوله تعالى: 'غفورٌ رحيم' / Règle de Tajweed pour 'Ghafurun Rahim'",
+    options: ["أ) إدغام كامل بغنة / Complete Idgham avec Ghunnah", "ب) إدغام كامل بدون غنة / Complete Idgham sans Ghunnah", "ج) إدغام ناقص بغنة / Idgham partiel avec Ghunnah", "د) الإظهار الشفوي / Al-Idhhar Al-Shafawi"],
+    correct: 1
+  },
+  {
+    text: "الحكم التجويدي في قوله تعالى: 'سميعٌ بصير' / Règle de Tajweed pour 'Samii'un Basir'",
+    options: ["أ) إدغام كامل بغنة / Complete Idgham avec Ghunnah", "ب) إدغام كامل بدون غنة / Complete Idgham sans Ghunnah", "ج) إدغام ناقص بغنة / Idgham partiel avec Ghunnah", "د) الإقلاب / Iqlab", "هـ) الإظهار الشفوي / Al-Idhhar Al-Shafawi"],
+    correct: 3
+  },
+  {
+    text: "الحكم التجويدي في قوله تعالى: 'عليمٌ بذات الصدور' / Règle de Tajweed pour 'Alimun Bi Dhati As-Sudur'",
+    options: ["أ) إدغام كامل بغنة / Complete Idgham avec Ghunnah", "ب) إدغام كامل بدون غنة / Complete Idgham sans Ghunnah", "ج) إدغام ناقص بغنة / Idgham partiel avec Ghunnah", "د) الإقلاب / Iqlab", "هـ) الإظهار الشفوي / Al-Idhhar Al-Shafawi"],
+    correct: 3
+  },
+  {
+    text: "الحكم التجويدي في قوله تعالى: 'منْ يعمل' / Règle de Tajweed pour 'Man Ya'mal'",
+    options: ["أ) إدغام كامل بغنة / Complete Idgham avec Ghunnah", "ب) إدغام كامل بدون غنة / Complete Idgham sans Ghunnah", "ج) إدغام ناقص بغنة / Idgham partiel avec Ghunnah", "د) الإظهار الحقيقي / Al-Idhhar Al-Haqiqi", "هـ) الإظهار الشفوي / Al-Idhhar Al-Shafawi"],
+    correct: 2
+  },
+  {
+    text: "في كلمة 'كفّارا'، حرف الراء مفخّم أم مرقّق؟ / Dans le mot 'Kaffara', la lettre Ra est-elle épaisse ou fine?",
+    options: ["أ) مفخّم / Épaisse", "ب) مرقّق / Fine"],
+    correct: 0
+  },
+  {
+    text: "الحكم التجويدي للمدّ في كلمة 'الضّالّين' / Règle du Madd pour 'Ad-Dallin'",
+    options: ["أ) مد طبيعي / Madd Tabii", "ب) مد واجب متصل / Madd Wajib Muttasil", "ج) مد جائز منفصل / Madd Jaiz Munfasil", "د) مد لازم كلمي مثقل / Madd Lazim Kalimi Muthaqal"],
+    correct: 2
+  },
+  {
+    text: "الحكم التجويدي في قوله تعالى: 'منْ أنفسكم' / Règle de Tajweed pour 'Min Anfusikum'",
+    options: ["أ) الإظهار الحلقى / Al-Idhhar Al-Halq", "ب) إدغام كامل بغنة / Complete Idgham avec Ghunnah", "ج) الإقلاب / Iqlab", "د) إدغام ناقص بغنة / Idgham partiel avec Ghunnah"],
+    correct: 0
+  },
+  {
+    text: "الإقلاب من أحكام الميم الساكنة / Iqlab fait-il partie des règles de la lettre Mim Sakin ?",
+    options: ["أ) صح / Vrai", "ب) خطأ / Faux"],
+    correct: 1
+  }
 ];
 
+let currentQuestion = 0;
 let score = 0;
-const quizContainer = document.getElementById("quiz");
-const confettiContainer = document.getElementById("confetti");
-const successSound = document.getElementById("success-sound");
-const failSound = document.getElementById("fail-sound");
+let studentAnswers = [];
+let studentName = "";
 
-function createConfetti() {
-  for(let i=0; i<50; i++){
-    const conf = document.createElement('div');
-    conf.classList.add('confetti-piece');
-    conf.style.left = Math.random()*100 + 'vw';
-    conf.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
-    conf.style.animationDuration = (2+Math.random()*3) + 's';
-    conf.style.width = conf.style.height = (5+Math.random()*5)+'px';
-    confettiContainer.appendChild(conf);
-    setTimeout(() => conf.remove(), 3000);
-  }
+function startQuiz() {
+  studentName = document.getElementById('studentName').value.trim();
+  if(studentName === "") { alert("يرجى إدخال الاسم / Veuillez entrer votre nom"); return; }
+  document.getElementById('startContainer').style.display = "none";
+  document.getElementById('quizContainer').style.display = "block";
+  showQuestion();
 }
 
-quizData.forEach((q, index) => {
-  const qDiv = document.createElement("div");
-  qDiv.classList.add("question");
-  
-  const qTitle = document.createElement("h3");
-  qTitle.textContent = `${index + 1}. ${q.question}`;
-  qDiv.appendChild(qTitle);
-  
-  const answersDiv = document.createElement("div");
-  answersDiv.classList.add("answers");
-  
-  q.answers.forEach((answer, i) => {
-    const btn = document.createElement("button");
-    btn.textContent = answer;
-    btn.onclick = () => {
-      if (!btn.disabled) {
-        const feedback = document.createElement("p");
-        feedback.classList.add("feedback");
-        if (i === q.correct) {
-          score++;
-          successSound.play();
-          createConfetti();
-          feedback.textContent = "🎉 أحسنتِ، إجابتك صحيحة!";
-        } else {
-          failSound.play();
-          feedback.textContent = `❌ إجابة خاطئة، الإجابة الصحيحة: ${q.answers[q.correct]}`;
-        }
-        qDiv.appendChild(feedback);
-        Array.from(answersDiv.children).forEach(b => b.disabled = true);
-        if(index === quizData.length - 1){
-          const resultDiv = document.getElementById("result");
-          resultDiv.textContent = `لقد أنهيت الاختبار! درجتك: ${score} من ${quizData.length}`;
-        }
-      }
-    };
-    answersDiv.appendChild(btn);
+function showQuestion() {
+  if(currentQuestion >= questions.length){
+    showResult();
+    return;
+  }
+  const q = questions[currentQuestion];
+  const quizDiv = document.getElementById('quizContainer');
+  let html = `<div class="question"><p><strong>السؤال ${currentQuestion+1}:</strong> ${q.text}</p><div class="options">`;
+  q.options.forEach((opt, index)=>{
+    html += `<button onclick="checkAnswer(this, ${index === q.correct})">${opt}</button>`;
   });
-  
-  qDiv.appendChild(answersDiv);
-  quizContainer.appendChild(qDiv);
-});
+  html += `</div><div class="feedback"></div><div class="firework"></div></div>`;
+  quizDiv.innerHTML = html;
+}
+
+function checkAnswer(button, correct) {
+  const q = questions[currentQuestion];
+  const feedback = button.parentElement.nextElementSibling;
+  const fireworkDiv = button.parentElement.nextElementSibling.nextElementSibling;
+  const correctSound = document.getElementById('correctSound');
+  const wrongSound = document.getElementById('wrongSound');
+
+  studentAnswers.push({question: q.text, answer: button.textContent, correctAnswer: q.options[q.correct]});
+
+  if(correct){
+    button.classList.add('correct');
+    feedback.textContent = "🎉 أحسنت! إجابة صحيحة! / Correct!";
+    correctSound.play();
+    score++;
+    for(let i=0;i<15;i++){
+      const star = document.createElement('div');
+      star.classList.add('star');
+      star.style.setProperty('--x', (Math.random()*200-100)+'px');
+      star.style.setProperty('--y', (Math.random()*-200)+'px');
+      fireworkDiv.appendChild(star);
+      setTimeout(()=>fireworkDiv.removeChild(star), 1000);
+    }
+  } else {
+    button.classList.add('wrong');
+    feedback.textContent = "❌ إجابة خاطئة! / Incorrect!";
+    wrongSound.play();
+  }
+
+  const buttons = button.parentElement.querySelectorAll('button');
+  buttons.forEach(b => b.disabled = true);
+
+  setTimeout(()=>{
+    currentQuestion++;
+    showQuestion();
+  }, 1000);
+}
+
+function showResult() {
+  document.getElementById('quizContainer').style.display = "none";
+  let resultDiv = document.getElementById('result');
+  resultDiv.innerHTML = `<h3>🏆 النتيجة النهائية للطالبة / Résultat final de ${studentName} :</h3>
+    <p>عدد الإجابات الصحيحة: ${score} من ${questions.length} / Score: ${score} sur ${questions.length}</p>
+    <h4>مراجعة الإجابات / Révision des réponses :</h4>`;
+  studentAnswers.forEach((item,index)=>{
+    resultDiv.innerHTML += `<p><strong>السؤال ${index+1}:</strong> ${item.question}<br>
+      إجابتك / Votre réponse: ${item.answer}<br>
+      الإجابة الصحيحة / Réponse correcte: ${item.correctAnswer}</p>`;
+  });
+}
 </script>
 
 </body>
