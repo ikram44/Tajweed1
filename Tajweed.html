@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>اختبار تجويد – مخارج الحروف وصفاتها</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #fff8f0;
+    color: #333;
+    direction: rtl;
+    text-align: right;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    color: #d35400;
+    font-size: 28px;
+  }
+  .question {
+    background-color: #fff3e0;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    box-shadow: 2px 2px 5px #ccc;
+  }
+  .answers button {
+    display: block;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background-color: #f0e68c;
+    transition: 0.3s;
+  }
+  .answers button:hover {
+    background-color: #ffd700;
+  }
+  .feedback {
+    font-weight: bold;
+    margin-top: 10px;
+    font-size: 18px;
+  }
+  #result {
+    font-size: 22px;
+    margin-top: 20px;
+    text-align: center;
+    color: #c0392b;
+  }
+  /* Confetti animation */
+  .confetti {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 9999;
+  }
+  .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #f39c12;
+    opacity: 0.9;
+    animation: fall 3s linear forwards;
+  }
+  @keyframes fall {
+    0% {transform: translateY(0) rotate(0deg);}
+    100% {transform: translateY(500px) rotate(360deg);}
+  }
+</style>
+</head>
+<body>
+
+<h1>💐 اختبار التجويد – مخارج الحروف وصفاتها 💐</h1>
+<p>إعداد المعلمة إكرام – طالبات وتعاونوا</p>
+
+<div id="quiz"></div>
+
+<div id="result"></div>
+
+<audio id="success-sound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+<audio id="fail-sound" src="https://www.soundjay.com/button/beep-10.wav"></audio>
+
+<div class="confetti" id="confetti"></div>
+
+<script>
+const quizData = [
+  {question: "ما هو مخرج حرف الألف؟", answers: ["من الحلق", "من الشفتين", "من الحلق واللسان", "من اللثة العليا"], correct: 0},
+  {question: "حرف الميم له صفة الإخفاء عند وقوفه قبل النون؟", answers: ["صح", "خطأ"], correct: 1},
+  {question: "اختر الحروف المخرجة من الشفتين:", answers: ["الباء، الميم", "القاف، الكاف", "الطاء، الدال", "العين، الغين"], correct: 0},
+  {question: "حرف الغين مخرجه:", answers: ["من أقصى الحلق", "من منتصف الحلق", "من الشفتين", "من اللثة"], correct: 1},
+  {question: "الصفة الصحيحة لحرف الصاد هي:", answers: ["مفخم", "مرقق", "مضغم", "مستوي"], correct: 0},
+  {question: "حروف الانفجارية المخرجة من الشفتين هي؟", answers: ["صح", "خطأ"], correct: 0},
+  {question: "اختر الحروف المخرجة من أقصى الحلق:", answers: ["الهاء، الحاء", "القاف، الغين", "العين، الغين، الحاء، الهاء", "الطاء، الدال"], correct: 2},
+  {question: "حروف الاستعلاء هي:", answers: ["الصاد، الضاد، الطاء، الظاء، القاف، الكاف", "الباء، الميم", "الفاء، الواو", "الراء، اللام"], correct: 0},
+  {question: "حرف الراء يُستعمل فيه التفخيم إذا سبقته:", answers: ["حروف الاستعلاء", "حروف المد فقط", "الشدة", "السكون"], correct: 0},
+  {question: "صفة الحروف الهجائية تُعرف بأنها:", answers: ["طريقة نطق الحرف", "مكان نطق الحرف", "وزن الحرف", "طول الحرف"], correct: 0}
+];
+
+let score = 0;
+const quizContainer = document.getElementById("quiz");
+const confettiContainer = document.getElementById("confetti");
+const successSound = document.getElementById("success-sound");
+const failSound = document.getElementById("fail-sound");
+
+function createConfetti() {
+  for(let i=0; i<50; i++){
+    const conf = document.createElement('div');
+    conf.classList.add('confetti-piece');
+    conf.style.left = Math.random()*100 + 'vw';
+    conf.style.backgroundColor = `hsl(${Math.random()*360}, 100%, 50%)`;
+    conf.style.animationDuration = (2+Math.random()*3) + 's';
+    conf.style.width = conf.style.height = (5+Math.random()*5)+'px';
+    confettiContainer.appendChild(conf);
+    setTimeout(() => conf.remove(), 3000);
+  }
+}
+
+quizData.forEach((q, index) => {
+  const qDiv = document.createElement("div");
+  qDiv.classList.add("question");
+  
+  const qTitle = document.createElement("h3");
+  qTitle.textContent = `${index + 1}. ${q.question}`;
+  qDiv.appendChild(qTitle);
+  
+  const answersDiv = document.createElement("div");
+  answersDiv.classList.add("answers");
+  
+  q.answers.forEach((answer, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = answer;
+    btn.onclick = () => {
+      if (!btn.disabled) {
+        const feedback = document.createElement("p");
+        feedback.classList.add("feedback");
+        if (i === q.correct) {
+          score++;
+          successSound.play();
+          createConfetti();
+          feedback.textContent = "🎉 أحسنتِ، إجابتك صحيحة!";
+        } else {
+          failSound.play();
+          feedback.textContent = `❌ إجابة خاطئة، الإجابة الصحيحة: ${q.answers[q.correct]}`;
+        }
+        qDiv.appendChild(feedback);
+        Array.from(answersDiv.children).forEach(b => b.disabled = true);
+        if(index === quizData.length - 1){
+          const resultDiv = document.getElementById("result");
+          resultDiv.textContent = `لقد أنهيت الاختبار! درجتك: ${score} من ${quizData.length}`;
+        }
+      }
+    };
+    answersDiv.appendChild(btn);
+  });
+  
+  qDiv.appendChild(answersDiv);
+  quizContainer.appendChild(qDiv);
+});
+</script>
+
+</body>
+</html>
